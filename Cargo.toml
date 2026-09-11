@@ -1,0 +1,21 @@
+[package]
+name = "ants"
+version = "2.0.0"
+edition = "2021"
+rust-version = "1.75"
+license = "MIT"
+description = "A thread pool for Rust: manage and recycle a massive number of workers, bounding the concurrency of your program."
+repository = "https://github.com/panjf2000/ants"
+readme = "README.md"
+keywords = ["thread-pool", "worker-pool", "concurrency", "threadpool", "scheduler"]
+categories = ["concurrency"]
+
+[dependencies]
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+
+[lints.rust]
+missing_docs = "warn"
+unsafe_op_in_unsafe_fn = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }

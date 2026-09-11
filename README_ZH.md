@@ -1,30 +1,29 @@
 <p align="center">
 <img src="https://raw.githubusercontent.com/panjf2000/logos/master/ants/logo.png" />
-<b>Go 语言的 goroutine 池</b>
+<b>Rust 语言的工作线程池</b>
 <br/><br/>
 <a title="Build Status" target="_blank" href="https://github.com/panjf2000/ants/actions?query=workflow%3ATests"><img src="https://img.shields.io/github/actions/workflow/status/panjf2000/ants/test.yml?branch=master&style=flat-square&logo=github-actions" /></a>
 <a title="Codecov" target="_blank" href="https://codecov.io/gh/panjf2000/ants"><img src="https://img.shields.io/codecov/c/github/panjf2000/ants?style=flat-square&logo=codecov" /></a>
 <a title="Release" target="_blank" href="https://github.com/panjf2000/ants/releases"><img src="https://img.shields.io/github/v/release/panjf2000/ants.svg?color=161823&style=flat-square&logo=smartthings" /></a>
 <a title="Tag" target="_blank" href="https://github.com/panjf2000/ants/tags"><img src="https://img.shields.io/github/v/tag/panjf2000/ants?color=%23ff8936&logo=fitbit&style=flat-square" /></a>
 <br/>
-<a title="Minimum Go Version" target="_blank" href="https://github.com/panjf2000/gnet"><img src="https://img.shields.io/badge/go-%3E%3D1.19-30dff3?style=flat-square&logo=go" /></a>
-<a title="Doc for ants" target="_blank" href="https://pkg.go.dev/github.com/panjf2000/ants/v2?tab=doc"><img src="https://img.shields.io/badge/go.dev-doc-007d9c?style=flat-square&logo=read-the-docs" /></a>
-<a title="Mentioned in Awesome Go" target="_blank" href="https://github.com/avelino/awesome-go#goroutines"><img src="https://awesome.re/mentioned-badge-flat.svg" /></a>
+<a title="Minimum Rust Version" target="_blank" href="https://www.rust-lang.org"><img src="https://img.shields.io/badge/rust-%3E%3D1.75-30dff3?style=flat-square&logo=rust" /></a>
+<a title="Doc for ants" target="_blank" href="https://docs.rs/ants"><img src="https://img.shields.io/badge/docs.rs-doc-007d9c?style=flat-square&logo=read-the-docs" /></a>
 </p>
 
 [英文](README.md) | 中文
 
 ## 📖 简介
 
-`ants` 是一个高性能的 goroutine 池，实现了对大规模 goroutine 的调度管理、goroutine 复用，允许使用者在开发并发程序的时候限制 goroutine 数量，复用资源，达到更高效执行任务的效果。
+`ants` 是一个高性能的工作线程池，实现了对大规模工作线程的调度管理、线程复用，允许使用者在开发并发程序的时候限制线程数量，复用资源，达到更高效执行任务的效果。
 
 ## 🚀 功能：
 
-- 自动调度海量的 goroutines，复用 goroutines
-- 定期清理过期的 goroutines，进一步节省资源
-- 提供了大量实用的接口：任务提交、获取运行中的 goroutine 数量、动态调整 Pool 大小、释放 Pool、重启 Pool 等
+- 自动调度海量的工作线程，复用工作线程
+- 定期清理过期的工作线程，进一步节省资源
+- 提供了大量实用的接口：任务提交、获取运行中的工作线程数量、动态调整 Pool 大小、释放 Pool、重启 Pool 等
 - 优雅处理 panic，防止程序崩溃
-- 资源复用，极大节省内存使用量；在大规模批量并发任务场景下甚至可能比 Go 语言的无限制 goroutine 并发具有***更高的性能***
+- 资源复用，极大节省内存使用量；在大规模批量并发任务场景下甚至可能比 Rust 语言的无限制线程并发具有***更高的性能***
 - 非阻塞机制
 - 预分配内存 (环形队列，可选)
 
@@ -48,78 +47,80 @@
 
 ## 🧰 安装
 
-### 使用 `ants` v1 版本:
+在 `Cargo.toml` 中加入 `ants`：
 
-``` powershell
-go get -u github.com/panjf2000/ants
+```toml
+[dependencies]
+ants = "2"
 ```
 
-### 使用 `ants` v2 版本 (开启 GO111MODULE=on):
+或者交给 Cargo 处理：
 
-```powershell
-go get -u github.com/panjf2000/ants/v2
+```shell
+cargo add ants
 ```
+
+`ants` 需要 stable Rust 1.75 或更新的版本，除了用于渲染默认日志时间戳的 `chrono` 之外没有其他依赖。
 
 ## 🛠 使用
-基本的使用请查看[示例](https://pkg.go.dev/github.com/panjf2000/ants/v2#pkg-examples).
+基本的使用请查看[示例](https://docs.rs/ants).
 
 ### Pool 配置
 
-通过在调用 `NewPool`/`NewPoolWithFunc`/`NewPoolWithFuncGeneric` 之时使用各种 optional function，可以设置 `ants.Options` 中各个配置项的值，然后用它来定制化 goroutine pool。
+通过在调用 `Pool::new`/`PoolWithFunc::new`/`PoolWithFuncGeneric::new` 之时传入各种 option function，可以设置 `ants::Options` 中各个配置项的值，然后用它来定制化工作线程池。
 
-更多细节请查看 [ants.Options](https://pkg.go.dev/github.com/panjf2000/ants/v2#Options) 和 [ants.Option](https://pkg.go.dev/github.com/panjf2000/ants/v2#Option)
-
+Rust 没有可变参数，所以原版的 `options ...Option` 在这里是一个 `ants::Opt` 切片；该类型命名为 `Opt` 是为了不遮蔽 `std::option::Option`。
 
 ### 自定义 pool 容量
-`ants` 支持实例化使用者自己的一个 Pool，指定具体的 pool 容量；通过调用 `NewPool` 方法可以实例化一个新的带有指定容量的 `Pool`，如下：
+`ants` 支持实例化使用者自己的一个 Pool，指定具体的 pool 容量；通过调用 `Pool::new` 方法可以实例化一个新的带有指定容量的 `Pool`，如下：
 
-``` go
-p, _ := ants.NewPool(10000)
+``` rust
+let p = ants::Pool::new(10000, &[]).unwrap();
 ```
 
 ### 任务提交
 
-提交任务通过调用 `ants.Submit` 方法：
-```go
-ants.Submit(func(){})
+提交任务通过调用 `ants::submit` 方法：
+```rust
+ants::submit(ants::task(|| {})).unwrap();
 ```
 
-### 动态调整 goroutine 池容量
-需要动态调整 pool 容量可以通过调用 `ants.Tune`：
+### 动态调整线程池容量
+需要动态调整 pool 容量可以通过调用 `Pool::tune`：
 
-``` go
-pool.Tune(1000) // Tune its capacity to 1000
-pool.Tune(100000) // Tune its capacity to 100000
+``` rust
+pool.tune(1000); // Tune its capacity to 1000
+pool.tune(100000); // Tune its capacity to 100000
 ```
 
 该方法是线程安全的。
 
-### 预先分配 goroutine 队列内存
+### 预先分配工作线程队列内存
 
-`ants` 支持预先为 pool 分配容量的内存， 这个功能可以在某些特定的场景下提高 goroutine 池的性能。比如， 有一个场景需要一个超大容量的池，而且每个 goroutine 里面的任务都是耗时任务，这种情况下，预先分配 goroutine 队列内存将会减少不必要的内存重新分配。
+`ants` 支持预先为 pool 分配容量的内存， 这个功能可以在某些特定的场景下提高线程池的性能。比如， 有一个场景需要一个超大容量的池，而且每个任务都是耗时任务，这种情况下，预先分配工作线程队列内存将会减少不必要的内存重新分配。
 
-```go
+```rust
 // 提前分配的 pool 容量的内存空间
-p, _ := ants.NewPool(100000, ants.WithPreAlloc(true))
+let p = ants::Pool::new(100000, &[ants::with_pre_alloc(true)]).unwrap();
 ```
 
 ### 释放 Pool
 
-```go
-pool.Release()
+```rust
+pool.release();
 ```
 
 或者
 
-```go
-pool.ReleaseTimeout(time.Second * 3)
+```rust
+pool.release_timeout(ants::Duration::SECOND * 3).unwrap();
 ```
 
 ### 重启 Pool
 
-```go
-// 只要调用 Reboot() 方法，就可以重新激活一个之前已经被销毁掉的池，并且投入使用。
-pool.Reboot()
+```rust
+// 只要调用 reboot() 方法，就可以重新激活一个之前已经被销毁掉的池，并且投入使用。
+pool.reboot();
 ```
 
 ## ⚙️ 关于任务执行顺序
